@@ -16,6 +16,16 @@ I created the ARM template for Java, however, it works for other languages as we
 
 ## deployment 
 
+## Prerequisite
+
+* Install Azure CLI
+* Login and set the target subscription
+
+```bash
+az login
+az account set -s <YOUR_TARGET_SUBSCRIPTION>
+```
+
 ## Deploy premium linux function with Java 8
 
 ```bash
