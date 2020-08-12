@@ -1,0 +1,212 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptionId": {
+            "type": "string",
+            "metadata": {
+                "description": "SubscriptionId"
+            }
+        },
+        "name": {
+            "type": "string",
+            "metadata": {
+                "description": "Function App name"
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue":"centraluseuap",
+            "metadata": {
+                "description": "location except for AppInsights"
+            }
+
+        },
+        "hostingPlanName": {
+            "type": "string",
+            "metadata": {
+                "description": "hosting plan name"
+            }
+        },
+        "serverFarmResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "resource group for server farm"
+            }
+        },
+        "storageAccountName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the strage account"
+            }   
+        },
+        "functionWorkerRuntime": {
+            "type": "string",
+            "metadata": {
+                "description": "The fucntion worker runtiime e.g. (java)"
+            }
+        },
+        "linuxFxVersion": {
+            "type": "string",
+            "defaultValue": "Java|8",
+            "metadata": {
+                "description": "linuxFxVersion that specify the language runtime for linux. (Java|8) for example"
+            }               
+        },
+        "sku": {
+            "type": "string",
+            "defaultValue": "ElasticPremium",
+             "metadata": {
+                "description": "sku"
+            }             
+        },
+        "skuCode": {
+            "type": "string",
+            "defaultValue": "EP1",
+            "metadata": {
+                "description": "skuCode"
+            }   
+        },
+        "targetWorkerCount": {
+            "type": "int",
+            "defaultValue": 3,
+            "metadata": {
+                "description": "target worker count"
+            }
+        },
+        "targetWorkerSizeId": {
+            "type": "int",
+            "defaultValue": 0,
+            "metadata": {
+                "description": "workerSizeId 0: Small 1: Medium 2: Large 3: D1 4: D2 5: D3 6: SmallV3 7: MediumV3 8: LargeV3 9: NestedSmall"
+            }
+        },
+        "maximumElasticWorkerCount": {
+            "type": "int",
+            "defaultValue": 20,
+            "metadata": {
+                "description": "max worker count"
+            }
+        },
+        "appInsightsName": {
+            "type": "string",
+            "metadata": {
+                "description": "the name of application insights"
+            }
+        },
+        "appInsightslocation": {
+            "type": "string",
+            "defaultValue": "eastus",
+            "metadata": {
+                "description": "the location of application insights"
+            }
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('name')]",
+            "type": "Microsoft.Web/sites",
+            "kind": "functionapp,linux",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "dependsOn": [
+                "[resourceId('microsoft.insights/components', parameters('appInsightsName'))]",
+                "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            ],
+            "properties": {
+                "name": "[parameters('name')]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~3"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "[parameters('functionWorkerRuntime')]"
+                        },
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(concat('microsoft.insights/components/', parameters('appInsightsName')), '2015-05-01').InstrumentationKey]"
+                        },
+                        {
+                            "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                            "value": "[reference(concat('microsoft.insights/components/', parameters('appInsightsName')), '2015-05-01').ConnectionString]"
+                        },
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('storageAccountName'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2019-06-01').keys[0].value,';EndpointSuffix=','core.windows.net')]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[concat(toLower(parameters('name')), '94ed')]"
+                        },
+                        {
+                            "name": "APPINSIGHTS_ENABLE_IN_PROC_AGENT",
+                            "value": "true"
+                        },
+                        {
+                            "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                            "value": "~2"
+                        }
+                    ],
+                    "linuxFxVersion": "[parameters('linuxFxVersion')]"
+                },
+                "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
+                "clientAffinityEnabled": false
+            }
+        },
+        {
+            "apiVersion": "2018-02-01",
+            "name": "[parameters('hostingPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[parameters('location')]",
+            "kind": "elastic",
+            "tags": {},
+            "dependsOn": [],
+            "properties": {
+                "targetWorkerCount": "[parameters('targetWorkerCount')]",
+                "targetWorkerSizeId": "[parameters('targetWorkerSizeId')]",
+                "reserved": true,
+                "maximumElasticWorkerCount": "[parameters('maximumElasticWorkerCount')]"
+            },
+            "sku": {
+                "tier": "[parameters('sku')]",
+                "name": "[parameters('skuCode')]"
+            }
+        },
+        {
+            "apiVersion": "2015-05-01",
+            "name": "[parameters('appInsightsName')]",
+            "type": "Microsoft.Insights/components",
+            "kind": "web",
+            "location": "[parameters('appInsightslocation')]",
+            "tags": {
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('name'))]": "Resource"
+            },
+            "properties": {
+                "Application_Type": "web",
+                "ApplicationId": "[parameters('name')]"
+            }
+        },
+        {
+            "apiVersion": "2019-06-01",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "sku": {
+                "name": "Standard_LRS"
+            },
+            "properties": {
+                "supportsHttpsTrafficOnly": true
+            }
+        }
+    ]
+}
