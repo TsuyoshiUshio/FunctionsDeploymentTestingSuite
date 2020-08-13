@@ -64,8 +64,8 @@ if [[ -z "$resourceGroup" ]]; then
 fi
 
 if [[ ! -z "$delete" ]]; then
-    echo "deleting... (az deployment group delete -n $deploymentName -g $resourceGroup)"
-    az deployment group delete -n $deploymentName -g $resourceGroup
+    echo "deleting... (az group delete -n $resourceGroup -y)"
+    az group delete -n $resourceGroup -y
     exit 0
 fi
 
