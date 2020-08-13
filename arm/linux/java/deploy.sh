@@ -2,7 +2,7 @@
 
 usage() { echo "Usage: deploy.sh -g <resourceGroup> -n <baseName> -l <location>(optional) -f <linuxFxVersion> -r <functionWorkerRuntime> -t <templateFile>(optional) -d <delete command>" 1>&2; exit 1;}
 
-declare resrouceGroup=""
+declare resourceGroup=""
 declare baseName=""
 declare location="centraluseuap"
 declare templateFile="premium-8-dt-template.json"

@@ -14,7 +14,7 @@ I created the ARM template for Java, however, it works for other languages as we
 
 # How to use
 
-## deployment 
+## Deploy Function App 
 
 ## Prerequisite
 
@@ -55,3 +55,18 @@ az account set -s <YOUR_TARGET_SUBSCRIPTION>
 ```bash
 ./deploy.sh
 ```
+
+## Create and Deploy Java HttpTrigger sample to the Function App
+
+### Java 8 sample 
+
+```bash
+$ ./create_and_deploy_java_app.sh -g <RESOURCE_GROUP_NAME> -n <FUNCTION_APP_PREFIX>
+```
+
+### Java 11 sample 
+
+```bash
+$ ./create_and_deploy_java_app.sh -g <RESOURCE_GROUP_NAME> -n <FUNCTION_APP_PREFIX> -v 11
+```
+
